@@ -1,0 +1,117 @@
+.board {
+	width: 550px;
+	height: 600px;
+	position: absolute;
+	background: url(../images/board.png) no-repeat top left;
+	overflow: hidden;
+}
+
+.c-b, .c-r {
+	width: 55px;
+	height: 55px;
+	position: absolute;
+	background: url(../images/chess.png) no-repeat top left;
+	cursor: pointer;
+}
+
+.c-b.c-j {
+	background-position: 0 0;
+}
+
+.c-b.c-m {
+	background-position: -55px 0;
+}
+
+.c-b.c-x {
+	background-position: -110px 0;
+}
+
+.c-b.c-s {
+	background-position: -165px 0;
+}
+
+.c-b.c-k {
+	background-position: 0 -55px;
+}
+
+.c-b.c-p {
+	background-position: -55px -55px;
+}
+
+.c-b.c-z {
+	background-position: -110px -55px;
+}
+
+.c-r.c-J {
+	background-position: 0 -110px;
+}
+
+.c-r.c-M {
+	background-position: -55px -110px;
+}
+
+.c-r.c-X {
+	background-position: -110px -110px;
+}
+
+.c-r.c-S {
+	background-position: -165px -110px;
+}
+
+.c-r.c-K {
+	background-position: 0 -165px;
+}
+
+.c-r.c-P {
+	background-position: -55px -165px;
+}
+
+.c-r.c-Z {
+	background-position: -110px -165px;
+}
+
+.helper-layer, .coord-layer, .chess-layer {
+	width: 0;
+	height: 0;
+	position: absolute;
+	left: -20px;
+	top: -24px;
+}
+
+.helper-s, .helper-c {
+	width: 55px;
+	height: 55px;
+	position: absolute;
+	background: url(../images/helper.gif) no-repeat center center;
+}
+
+.helper-s {
+	background-position: 0 0;
+}
+
+.helper-c {
+	background-position: -55px 0;
+}
+
+.coord {
+	width: 30px;
+	height: 15px;
+	position: absolute;
+	font: bold 12px consolas;
+	text-align: center;
+	background: rgba(255, 255, 255, .6);
+	border-radius: 4px;
+}
+
+.c-b span, .c-r span {
+	width: 18px;
+	height: 15px;
+	display: block;
+	background: #ffb336;
+	color: white;
+	border: 2px solid white;
+	box-shadow: 1px 1px 2px rgba(0, 0, 0, .5);
+	font: bold 12px consolas;
+	text-align: center;
+	border-radius: 8px;
+}
