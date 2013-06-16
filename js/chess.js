@@ -5,23 +5,21 @@
 			chessLayer: $('<div class="chess-layer"></div>'),
 			helperLayer: $('<div class="helper-layer"></div>'),
 			coordLayer: $('<div class="coord-layer"></div>'),
-			sprites: (function() {
-				var sp = {};
-				$.each(['J1,1,1', 'M1,2,1', 'X1,3,1', 'S1,4,1', 'K,5,1', 'S2,6,1', 'X2,7,1', 'M2,8,1', 'J2,9,1', 'P1,2,3', 'P2,8,3', 'Z1,1,4', 'Z2,3,4', 'Z3,5,4', 'Z4,7,4', 'Z5,9,4', 'j1,1,10', 'm1,2,10', 'x1,3,10', 's1,4,10', 'k,5,10', 's2,6,10', 'x2,7,10', 'm2,8,10', 'j2,9,10', 'p1,2,8', 'p2,8,8', 'z1,1,7', 'z2,3,7', 'z3,5,7', 'z4,7,7', 'z5,9,7'], function(i, v) {
-					var s = v.split(','), t = v.substr(0, 1);
-					sp[s[0]] = {
-						type: t, coord: [s[1], s[2]],
-						chess: $('<div class="c-' + (/[A-Z]/.test(t) ? 'r' : 'b') + ' c-' + t + '"></div>')
-					}
-				});
-				return sp;
-			}()),
-			matrix: (function() {
-				var a = [];
-				for (var i = 0; i <= 9; i++) { a.push('...........'.split('')); }
-				return a;
-			}())
+			sprites: {},
+			spritesData: [],
+			matrix: [],
+			history: []
 		};
+
+	for (var i = 0; i <= 9; i++) { xq.matrix.push('...........'.split('')); }
+	$.each('J11,M12,X13,S14,K15,S26,X27,M28,J29,P120,P226,Z128,Z230,Z332,Z434,Z536,j182,m183,x184,s185,k186,s287,x288,m289,j290,p165,p271,z155,z257,z359,z461,z563'.split(','), function(i, v) {
+		var k = v.substr(0, 2), t = v.substr(0, 1);
+		xq.spritesData.push(k);
+		xq.sprites[k] = {
+			index: i, name: k, type: t, coord: _dataToCoord(+v.substr(2)),
+			chess: $('<div class="c-' + (/[A-Z]/.test(t) ? 'r' : 'b') + ' c-' + t + '"></div>')
+		};
+	});
 
 	/**
 	 * init the game board
@@ -52,6 +50,26 @@
 	}
 
 	/**
+	 * translate data to coord
+	 * @param {number} data 1-90
+	 * @returns {Array}
+	 * @private
+	 */
+	function _dataToCoord(data) {
+		return [((data - 0.5) % 9 | 0) + 1, (data + 8) / 9 | 0]
+	}
+
+	/**
+	 * translate coord to data
+	 * @param {array} coord [x,y]
+	 * @returns {number}
+	 * @private
+	 */
+	function _coordToData(coord) {
+		return coord[0] + coord[1] * 9 - 9;
+	}
+
+	/**
 	 * @param {array} coord [x,y]
 	 * @private
 	 */
@@ -60,7 +78,7 @@
 	}
 
 	/**
-	 * @param {array} coord [x,y]
+	 * @param {object} pos [x,y]
 	 * @private
 	 */
 	function _posToCoord(pos) {
@@ -68,21 +86,22 @@
 	}
 
 	/**
-	 * fix coord to array format
-	 * @param {array|object|number} x
+	 * find chess sprite by dom selector or a coord
+	 * @param {dom|number} x
 	 * @param {number} [y]
 	 * @private
 	 */
 	function _findSprite(x, y) {
 		var retSprite = false;
 		$.each(xq.sprites, function(key, sprite) {
-			if (!retSprite && sprite.coord[0] == x && sprite.coord[1] == y) { retSprite = sprite; }
+			if (!retSprite && ((x.eq && x[0] == sprite.chess[0]) ||
+				(sprite.coord[0] == x && sprite.coord[1] == y))) { retSprite = sprite; }
 		});
 		return retSprite;
 	}
 
 	/**
-	 * fix coord to array format
+	 * fix number, ovject format coord to array format
 	 * @param {array|object|number} x
 	 * @param {number} [y]
 	 * @private
@@ -96,6 +115,7 @@
 	}
 
 	/**
+	 * test is the coord in a coord array
 	 * @param {array} coord
 	 * @param {array|string} coordArray
 	 * @returns {boolean}
@@ -103,8 +123,8 @@
 	 */
 	function _inCoordArray(coord, coordArray) {
 		var retResult = false;
-		if (!$.isArray(coordArray)) { coordArray = JSON.parse(coordArray); }
 		$.each(coordArray, function(index, cCoord) {
+			cCoord = _dataToCoord(cCoord);
 			if (!retResult && coord[0] === cCoord[0] && coord[1] === cCoord[1]) {
 				retResult = true;
 			}
@@ -113,7 +133,7 @@
 	}
 
 	/**
-	 *
+	 * count chess number between 2 coords
 	 * @param {array} coord1
 	 * @param {array} coord2
 	 * @returns {number}
@@ -139,6 +159,7 @@
 	function _drawHelper() {
 		var me = this.eq(0);
 		$.each(arguments, function(index, coord) {
+			if ($.isNumeric(coord)) { coord = _dataToCoord(coord); }
 			var x = coord[0], y = coord[1];
 			if (me.checkMove(x, y)) {
 				if (xq.matrix[x][y] == '.') {
@@ -165,18 +186,6 @@
 
 	$.fn.extend({
 		/**
-		 * find chess sprite by dom selector
-		 * @returns {object} one sprite of xq.sprites
-		 */
-		getSprite: function() {
-			var retSprite = false, dom = this[0];
-			$.each(xq.sprites, function(key, sprite) {
-				if (!retSprite && dom === sprite.chess[0]) { retSprite = sprite; }
-			});
-			return retSprite;
-		},
-
-		/**
 		 * put chess to coord
 		 * @param {array|object|number} x
 		 * @param {number} [y]
@@ -184,7 +193,7 @@
 		 */
 		putTo: function(x, y) {
 			var coord = _fixCoord(x, y),
-				sprite = this.eq(0).getSprite();
+				sprite = _findSprite(this);
 			if (sprite) {
 				xq.matrix[coord[0]][coord[1]] = sprite.type;
 				sprite.coord = coord;
@@ -201,17 +210,20 @@
 		 */
 		moveTo: function(x, y) {
 			var coord = _fixCoord(x, y),
-				sprite = this.eq(0).getSprite(), target = _findSprite(coord[0], coord[1]);
+				sprite = _findSprite(this);
+			x = coord[0], y = coord[1];
+			var target = _findSprite(x, y);
 
 			if (sprite && this.checkMove(coord)) {
 				_clearHelper();
 				xq.matrix[sprite.coord[0]][sprite.coord[1]] = '.';
-				xq.matrix[coord[0]][coord[1]] = sprite.type;
+				xq.matrix[x][y] = sprite.type;
 				xq.chessLayer.append(sprite.chess);
 				sprite.coord = coord;
 				sprite.chess.animate(_coordToPos(coord), function() {
 					if (target && target.chess) { target.chess.remove(); }
 				});
+				xq.history.push([sprite.name, x, y, target.name]);
 				return this;
 			} else { return false;}
 		},
@@ -223,7 +235,7 @@
 		 * @returns {boolean}
 		 */
 		checkMove: function(x, y) {
-			var sprite = this.eq(0).getSprite(),
+			var sprite = _findSprite(this),
 				nc = _fixCoord(x, y),
 				oc = sprite.coord,
 				x, y;
@@ -293,10 +305,10 @@
 		 * show the chess helper to see where can put down the chess
 		 */
 		showHelper: function() {
-			var sprite = this.eq(0).getSprite(), x = sprite.coord[0], y = sprite.coord[1];
+			var sprite = _findSprite(this),
+				x = sprite.coord[0], y = sprite.coord[1];
 
 			_clearHelper();
-
 			switch (sprite.type) {
 			case 'J':
 			case 'j':
@@ -307,17 +319,17 @@
 			case 'm':
 				return _drawHelper.call(this, [x - 2, y - 1], [x - 1, y - 2], [x + 1, y - 2], [x + 2, y - 1], [x + 2, y + 1], [x + 1, y + 2], [x - 1, y + 2], [x - 2, y + 1]);
 			case 'X':
-				return _drawHelper.call(this, [3, 1], [7, 1], [1, 3], [5, 3], [9, 3], [3, 5], [7, 5]);
+				return _drawHelper.call(this, 3, 7, 19, 23, 27, 39, 43);
 			case 'x':
-				return _drawHelper.call(this, [3, 10], [7, 10], [1, 8], [5, 8], [9, 8], [3, 6], [7, 6]);
+				return _drawHelper.call(this, 84, 88, 64, 68, 72, 48, 52);
 			case 'S':
-				return _drawHelper.call(this, [4, 1], [4, 3], [5, 2], [6, 1], [6, 3]);
+				return _drawHelper.call(this, 4, 22, 14, 6, 24);
 			case 's':
-				return _drawHelper.call(this, [4, 8], [4, 10], [5, 9], [6, 8], [6, 10]);
+				return _drawHelper.call(this, 67, 85, 77, 69, 87);
 			case 'K':
-				return _drawHelper.call(this, [4, 1], [4, 2], [4, 3], [5, 1], [5, 2], [5, 3], [6, 1], [6, 2], [6, 3]);
+				return _drawHelper.call(this, 4, 13, 22, 5, 14, 23, 6, 15, 24);
 			case 'k':
-				return _drawHelper.call(this, [4, 8], [4, 9], [4, 10], [5, 8], [5, 9], [5, 10], [6, 8], [6, 9], [6, 10]);
+				return _drawHelper.call(this, 67, 76, 85, 68, 77, 86, 69, 78, 87);
 			case 'Z':
 				return _drawHelper.call(this, [x - 1, y], [x + 1, y], [x, y + 1]);
 			case 'z':
