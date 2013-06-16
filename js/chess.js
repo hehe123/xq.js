@@ -26,7 +26,6 @@
 	 * add chess sprites to board
 	 */
 	function _init() {
-		var a = +new Date();
 		$.each(xq.sprites, function(key, sprite) {
 			xq.chessLayer.append(_put(sprite.chess, sprite.coord));
 		});
@@ -36,7 +35,7 @@
 			cursor: "move",
 			helper: "clone",
 			grid: [55, 55]
-		}).on('dragstart',function(e) {
+		}).on('dragstart',function() {
 				$(this).css({opacity: 0.5});
 			}).on('dragstop',function(e, ui) {
 				$(this).css({opacity: 1});
@@ -47,7 +46,6 @@
 			}).on('mouseup', function() {
 				_clearHelper();
 			});
-		console.log(+new Date() - a);
 	}
 
 	/**
@@ -61,7 +59,7 @@
 
 	/**
 	 * translate coord to data
-	 * @param {array} coord [x,y]
+	 * @param {Array} coord [x,y]
 	 * @returns {number}
 	 */
 	function _coordToData(coord) {
@@ -69,14 +67,14 @@
 	}
 
 	/**
-	 * @param {array} coord [x,y]
+	 * @param {Array} coord [x,y]
 	 */
 	function _coordToPos(coord) {
 		return { left: 55 * coord[0], top: 55 * coord[1] }
 	}
 
 	/**
-	 * @param {array} pos [x,y]
+	 * @param {Array} pos [x,y]
 	 */
 	function _posToCoord(pos) {
 		return [ pos.left / 55 | 0, pos.top / 55 | 0 ];
@@ -97,7 +95,7 @@
 
 	/**
 	 * fix number, ovject format coord to array format
-	 * @param {array|object|number} x
+	 * @param {Array|object|number} x
 	 * @param {number} [y]
 	 */
 	function _fixCoord(x, y) {
@@ -108,8 +106,8 @@
 
 	/**
 	 * count chess number between 2 coords
-	 * @param {array} coord1
-	 * @param {array} coord2
+	 * @param {Array} coord1
+	 * @param {Array} coord2
 	 * @returns {number}
 	 */
 	function _countChess(coord1, coord2) {
@@ -142,7 +140,7 @@
 				xq.hasHelper = true;
 			}
 		})
-	};
+	}
 
 	/**
 	 * clear all helper which shows on layer
@@ -157,9 +155,9 @@
 	/**
 	 * put chess to coord
 	 * @param {object} dom jquery selector
-	 * @param {array|object|number} x
+	 * @param {Array|object|number} x
 	 * @param {number} [y]
-	 * @return {selector} this
+	 * @return {object} dom this
 	 */
 	function _put(dom, x, y) {
 		var coord = _fixCoord(x, y),
@@ -175,23 +173,20 @@
 	/**
 	 * move chess to coord with animation
 	 * @param {object} dom jquery selector
-	 * @param {array|object|number} x
+	 * @param {Array|object|number} x
 	 * @param {number} [y]
-	 * @return {selector} this
 	 */
 	function _move(dom, x, y) {
-		var coord = _fixCoord(x, y),
-			sprite = xq.sprites[dom.attr('id')];
-		x = coord[0], y = coord[1];
-		var target = _findSprite(x, y);
+		var coord = _fixCoord(x, y), x1 = coord[0], y1 = coord[1],
+			sprite = xq.sprites[dom.attr('id')], target = _findSprite(x1, y1);
 
 		if (sprite && _checkMove(dom, coord)) {
 			_clearHelper();
 			xq.matrix[sprite.coord[0]][sprite.coord[1]] = '.';
-			xq.matrix[x][y] = sprite.type;
+			xq.matrix[x1][y1] = sprite.type;
 			xq.chessLayer.append(sprite.chess);
 
-			xq.history.push(sprite.index, _coordToData([x, y]));
+			xq.history.push(sprite.index, _coordToData([x1, y1]));
 			sprite.coord = coord;
 			sprite.chess.animate(_coordToPos(coord), function() {
 				if (target && target.chess) {
@@ -199,7 +194,7 @@
 					xq.history.push(-target.index);
 				}
 			});
-		} else { return false;}
+		}
 	}
 
 	/**
@@ -207,42 +202,37 @@
 	 * @param {object} dom jquery selector
 	 */
 	function _showHelper(dom) {
-		var sprite = xq.sprites[dom.attr('id')];
-		x = sprite.coord[0], y = sprite.coord[1];
+		var sprite = xq.sprites[dom.attr('id')], t = sprite.type,
+			x = sprite.coord[0], y = sprite.coord[1];
 
 		_clearHelper();
-		switch (sprite.type) {
-		case 'J':
-		case 'j':
-		case 'P':
-		case 'p':
-			return _drawHelper.call(dom, [x, 1], [x, 2], [x, 3], [x, 4], [x, 5], [x, 6], [x, 7], [x, 8], [x, 9], [x, 10], [1, y], [2, y], [3, y], [4, y], [5, y], [6, y], [7, y], [8, y], [9, y]);
-		case 'M':
-		case 'm':
-			return _drawHelper.call(dom, [x - 2, y - 1], [x - 1, y - 2], [x + 1, y - 2], [x + 2, y - 1], [x + 2, y + 1], [x + 1, y + 2], [x - 1, y + 2], [x - 2, y + 1]);
-		case 'X':
-			return _drawHelper.call(dom, 3, 7, 19, 23, 27, 39, 43);
-		case 'x':
-			return _drawHelper.call(dom, 84, 88, 64, 68, 72, 48, 52);
-		case 'S':
-			return _drawHelper.call(dom, 4, 22, 14, 6, 24);
-		case 's':
-			return _drawHelper.call(dom, 67, 85, 77, 69, 87);
-		case 'K':
-			return _drawHelper.call(dom, 4, 13, 22, 5, 14, 23, 6, 15, 24);
-		case 'k':
-			return _drawHelper.call(dom, 67, 76, 85, 68, 77, 86, 69, 78, 87);
-		case 'Z':
-			return _drawHelper.call(dom, [x - 1, y], [x + 1, y], [x, y + 1]);
-		case 'z':
-			return _drawHelper.call(dom, [x - 1, y], [x + 1, y], [x, y - 1]);
+		if (t == 'J' || t == 'j' || t == 'P' || t == 'p') {
+			_drawHelper.call(dom, [x, 1], [x, 2], [x, 3], [x, 4], [x, 5], [x, 6], [x, 7], [x, 8], [x, 9], [x, 10], [1, y], [2, y], [3, y], [4, y], [5, y], [6, y], [7, y], [8, y], [9, y]);
+		} else if (t == 'M' || t == 'm') {
+			_drawHelper.call(dom, [x - 2, y - 1], [x - 1, y - 2], [x + 1, y - 2], [x + 2, y - 1], [x + 2, y + 1], [x + 1, y + 2], [x - 1, y + 2], [x - 2, y + 1]);
+		} else if (t == 'X') {
+			_drawHelper.call(dom, 3, 7, 19, 23, 27, 39, 43);
+		} else if (t == 'x') {
+			_drawHelper.call(dom, 84, 88, 64, 68, 72, 48, 52);
+		} else if (t == 'S') {
+			_drawHelper.call(dom, 4, 22, 14, 6, 24);
+		} else if (t == 's') {
+			_drawHelper.call(dom, 67, 85, 77, 69, 87);
+		} else if (t == 'K') {
+			_drawHelper.call(dom, 4, 13, 22, 5, 14, 23, 6, 15, 24);
+		} else if (t == 'k') {
+			_drawHelper.call(dom, 67, 76, 85, 68, 77, 86, 69, 78, 87);
+		} else if (t == 'Z') {
+			_drawHelper.call(dom, [x - 1, y], [x + 1, y], [x, y + 1]);
+		} else { //if (t == 'z')
+			_drawHelper.call(dom, [x - 1, y], [x + 1, y], [x, y - 1]);
 		}
 	}
 
 	/**
 	 * check is the target coord an be move on
 	 * @param {object} dom jquery selector
-	 * @param {array|object|number} x
+	 * @param {Array|object|number} x
 	 * @param {number} [y]
 	 * @returns {boolean}
 	 */
@@ -251,56 +241,41 @@
 			nc = _fixCoord(x, y), nx = nc[0], ny = nc[1],
 			oc = sprite.coord, ox = oc[0], oy = oc[1], od = _coordToData(oc);
 
-		//coordinate protect
-		if (nx < 1 || nx > 9 || ny < 0 || ny > 10) {
-			return false;
-		}
-		//if target coord has own side chess, move should failed
-		if (/[a-z]{2}|[A-Z]{2}/.test(xq.matrix[nx][ny] + sprite.type)) {
+		if (nx < 1 || nx > 9 || ny < 0 || ny > 10 //coordinate protect
+			|| /[a-z]{2}|[A-Z]{2}/.test(xq.matrix[nx][ny] + sprite.type)) { //if target coord has own side chess, move should failed
 			return false;
 		}
 
-		switch (t) {
-		case 'J':
-		case 'j':
+		if (t == 'J' || t == 'j') {
 			return ((nx == ox || ny == oy) //one of abscissa or ordinate must equal
 				&& _countChess(nc, oc) === 0); //no chess between initial coord and target coord
-		case 'M':
-		case 'm':
+		} else if (t == 'M' || t == 'm') {
 			return((Math.abs(nx - ox) == 2 && Math.abs(ny - oy) == 1 && xq.matrix[(nx + ox) / 2][oy] == '.') //abscissa
 				|| (Math.abs(nx - ox) == 1 && Math.abs(ny - oy) == 2 && xq.matrix[ox][(ny + oy) / 2] == '.'));
-		case 'X':
-		case 'x':
+		} else if (t == 'X' || t == 'x') {
 			return (Math.abs(nx - ox) == 2 //offset of abscissas limit to 2
 				&& xq.matrix[(nx + ox) / 2][(ny + oy) / 2] == '.' //no chess between initial coord and target coord
 				&& ((t == 'X' && $.inArray(od, [3, 7, 19, 23, 27, 39, 43] != -1)) //all valid coordinate
 				|| (t == 'x' && $.inArray(od, [84, 88, 64, 68, 72, 48, 52] != -1)))); //all valid coordinate
-		case 'S':
-		case 's':
+		} else if (t == 'S' || t == 's') {
 			return ((Math.abs(nx - ox) == 1 && (Math.abs(ny - oy) == 1)) //offset 1 on ordinate and ordinate
 				&& ((t == 'S' && $.inArray(od, [4, 22, 14, 6, 24] != -1)) //all valid coordinate
 				|| (t == 's' && $.inArray(od, [67, 85, 77, 69, 87] != -1)))); //all valid coordinate
-		case 'K':
-		case 'k':
+		} else if (t == 'K' || t == 'k') {
 			return (((Math.abs(nx - ox) == 1 && ny == oy) //offset 1 on abscissa
 				|| (Math.abs(ny - oy) == 1 && nx == ox)) //offset 1 on ordinate
 				&& ((t == 'K' && $.inArray(od, [4, 13, 22, 5, 14, 23, 6, 15, 24] != -1)) //all valid coordinate
 				|| (t == 'k' && $.inArray(od, [67, 76, 85, 68, 77, 86, 69, 78, 87] != -1)))); //all valid coordinate
-		case 'P':
-		case 'p':
+		} else if (t == 'P' || t == 'p') {
 			return ((nx == ox || ny == oy) //one of abscissa or ordinate must equal
 				&& (((xq.matrix[nx][ny]) != '.' && _countChess(nc, oc) === 1) //must have one chess between initial coord and target coord if target is opposite chess
 				|| ((xq.matrix[nx][ny]) == '.' && _countChess(nc, oc) === 0))); //must have one chess between initial coord and target coord if target is empty
-		case 'Z':
+		} else if (t == 'Z') {
 			return ((nx == ox && ny == oy + 1) //go forward
-				|| (oy >= 6
-				&& ((nx == ox - 1 && ny == oy) //go side
-				|| (nx == ox + 1 && ny == oy)))); //go side
-		case 'z':
+				|| (oy >= 6 && ((nx == ox - 1 && ny == oy) || (nx == ox + 1 && ny == oy)))); //go side
+		} else { //if (t=='z')
 			return ((nx == ox && ny == oy - 1) //go forward
-				|| (oy <= 5
-				&& ((nx == ox - 1 && ny == oy) //go side
-				|| (nx == ox + 1 && ny == oy)))); //go side
+				|| (oy <= 5 && ((nx == ox - 1 && ny == oy) || (nx == ox + 1 && ny == oy)))); //go side
 		}
 	}
 
@@ -341,7 +316,7 @@
 		 */
 		window.showCoord = function() {
 			xq.coordLayer = $('<div class="coord-layer"></div>');
-			xq.board.prepend(xq.coordLayer)
+			xq.board.prepend(xq.coordLayer);
 			for (var y = 1; y <= 10; y++) {
 				for (var x = 1; x <= 9; x++) {
 					xq.coordLayer.append($('<div class="coord">' + x + ',' + y + '</div>')
